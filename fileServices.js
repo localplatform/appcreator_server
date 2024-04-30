@@ -36,23 +36,28 @@ export async function copyFile(source, destination) {
 }
 
 export async function copyDirectory(source, destination) {
-    const srcDir = path.join(__dirname, source)
-    const destDir = path.join(__dirname, destination)
+    const srcDir = path.resolve(__dirname, source)
+    const destDir = path.resolve(__dirname, destination)
 
     try {
+        // Crée le répertoire de destination s'il n'existe pas
         await fs.mkdir(destDir, { recursive: true })
 
+        // Lire le contenu du répertoire source
         const items = await fs.readdir(srcDir)
 
         for (let item of items) {
             const srcItem = path.join(srcDir, item)
             const destItem = path.join(destDir, item)
 
+            // Vérifie si l'élément est un fichier ou un dossier
             const stats = await fs.stat(srcItem)
 
             if (stats.isDirectory()) {
+                // Appel récursif pour copier le sous-dossier
                 await copyDirectory(srcItem, destItem)
             } else {
+                // Copie si c'est un fichier
                 await fs.copyFile(srcItem, destItem)
             }
         }
