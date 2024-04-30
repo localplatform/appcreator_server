@@ -5,4 +5,4 @@ import {
     createProject
 } from './controllers.js'
 
-publicRouter.post('/createProject', createProject)
+publicRouter.post('/createproject', createProject)
