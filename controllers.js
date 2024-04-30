@@ -12,50 +12,38 @@ async function createProject(req, res) {
     const projectName = 'newProject'
     const projectPath = path.join(__dirname, 'database', 'projects', projectName)
 
-    /*try {
-        // Copie le template du projet
-        await files.copyDirectory('./database/template', './database/projects/' + projectName)
-
-        // Exécute npm install dans le répertoire du projet
-        exec(`npm install`, { cwd: projectPath }, (error, stdout, stderr) => {
-            if (error) {
-                console.error(`exec error: ${error}`)
-                return res.status(500).send('npm install failed: ' + error)
-            }
-            console.log(`stdout: ${stdout}`)
-            console.error(`stderr: ${stderr}`)
-            
-            res.status(200).send('Project created successfully')
-        })
-    } catch (error) {
-        res.status(500).send('Error when creating project :' + error.message)
-    }*/
-
     try {
+        const templatePath = path.join(__dirname, 'database', 'template')
+        const newProjectPath = path.join(__dirname, 'database', 'projects', projectName)
+
         // Copie le template du projet
-        await files.copyDirectory('./database/template', './database/projects/' + projectName)
+        await files.copyDirectory(templatePath, newProjectPath)
 
         // Exécute npm install dans le répertoire du projet
-        const npmInstall = spawn('npm', ['install'], { cwd: projectPath })
+        const child = spawn('npm', ['install'], { cwd: newProjectPath })
 
-        npmInstall.stdout.on('data', data => {
-            console.log(`stdout: ${data}`)
+        child.stdout.on('data', (data) => {
+            console.log(`stdout: ${data.toString()}`)
         })
 
-        npmInstall.stderr.on('data', data => {
-            console.error(`stderr: ${data}`)
+        child.stderr.on('data', (data) => {
+            console.error(`stderr: ${data.toString()}`)
         })
-        
 
-        npmInstall.on('close', code => {
+        child.on('error', (error) => {
+            console.error(`error: ${error.message}`)
+            res.status(500).send('npm install failed: ' + error.message)
+        })
+
+        child.on('exit', (code) => {
             if (code === 0) {
                 res.status(200).send('Project created successfully')
             } else {
-                res.status(500).send('npm install failed with code ' + code)
+                res.status(500).send(`npm install failed with code ${code}`)
             }
         })
     } catch (error) {
-        res.status(500).send('Error when creating project :' + error.message)
+        res.status(500).send('Error when creating project: ' + error.message)
     }
 }
 
