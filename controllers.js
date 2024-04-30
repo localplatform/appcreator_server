@@ -19,19 +19,22 @@ async function createProject(req, res) {
         // Exécute npm install dans le répertoire du projet avec les sorties redirigées
         const child = spawn('npm', ['install'], { cwd: projectPath, stdio: 'inherit' })
 
-        child.on('error', (error) => {
-            console.error(`error: ${error.message}`)
+        child.on('error', error => {
+            console.error(`Error during npm install: ${error.message}`)
             res.status(500).send('npm install failed: ' + error.message)
         })
 
-        child.on('close', (code) => {
+        child.on('close', code => {
             if (code === 0) {
+                console.log('NPM install completed successfully.')
                 res.status(200).send('Project created successfully')
             } else {
+                console.error(`NPM install exited with code ${code}`)
                 res.status(500).send(`npm install failed with code ${code}`)
             }
         })
     } catch (error) {
+        console.error(`Error when creating project: ${error.message}`)
         res.status(500).send('Error when creating project: ' + error.message)
     }
 }
